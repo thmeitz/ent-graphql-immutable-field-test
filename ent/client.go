@@ -8,7 +8,9 @@ import (
 	"log"
 
 	"entgo.io/bug/ent/migrate"
+	"github.com/rs/xid"
 
+	"entgo.io/bug/ent/testlist"
 	"entgo.io/bug/ent/user"
 
 	"entgo.io/ent/dialect"
@@ -20,6 +22,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// TestList is the client for interacting with the TestList builders.
+	TestList *TestListClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -35,6 +39,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.TestList = NewTestListClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -67,9 +72,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		TestList: NewTestListClient(cfg),
+		User:     NewUserClient(cfg),
 	}, nil
 }
 
@@ -87,15 +93,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:      ctx,
+		config:   cfg,
+		TestList: NewTestListClient(cfg),
+		User:     NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		TestList.
 //		Query().
 //		Count(ctx)
 //
@@ -118,7 +126,98 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.TestList.Use(hooks...)
 	c.User.Use(hooks...)
+}
+
+// TestListClient is a client for the TestList schema.
+type TestListClient struct {
+	config
+}
+
+// NewTestListClient returns a client for the TestList from the given config.
+func NewTestListClient(c config) *TestListClient {
+	return &TestListClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `testlist.Hooks(f(g(h())))`.
+func (c *TestListClient) Use(hooks ...Hook) {
+	c.hooks.TestList = append(c.hooks.TestList, hooks...)
+}
+
+// Create returns a create builder for TestList.
+func (c *TestListClient) Create() *TestListCreate {
+	mutation := newTestListMutation(c.config, OpCreate)
+	return &TestListCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TestList entities.
+func (c *TestListClient) CreateBulk(builders ...*TestListCreate) *TestListCreateBulk {
+	return &TestListCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TestList.
+func (c *TestListClient) Update() *TestListUpdate {
+	mutation := newTestListMutation(c.config, OpUpdate)
+	return &TestListUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TestListClient) UpdateOne(tl *TestList) *TestListUpdateOne {
+	mutation := newTestListMutation(c.config, OpUpdateOne, withTestList(tl))
+	return &TestListUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TestListClient) UpdateOneID(id xid.ID) *TestListUpdateOne {
+	mutation := newTestListMutation(c.config, OpUpdateOne, withTestListID(id))
+	return &TestListUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TestList.
+func (c *TestListClient) Delete() *TestListDelete {
+	mutation := newTestListMutation(c.config, OpDelete)
+	return &TestListDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *TestListClient) DeleteOne(tl *TestList) *TestListDeleteOne {
+	return c.DeleteOneID(tl.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *TestListClient) DeleteOneID(id xid.ID) *TestListDeleteOne {
+	builder := c.Delete().Where(testlist.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TestListDeleteOne{builder}
+}
+
+// Query returns a query builder for TestList.
+func (c *TestListClient) Query() *TestListQuery {
+	return &TestListQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a TestList entity by its id.
+func (c *TestListClient) Get(ctx context.Context, id xid.ID) (*TestList, error) {
+	return c.Query().Where(testlist.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TestListClient) GetX(ctx context.Context, id xid.ID) *TestList {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *TestListClient) Hooks() []Hook {
+	return c.hooks.TestList
 }
 
 // UserClient is a client for the User schema.
@@ -161,7 +260,7 @@ func (c *UserClient) UpdateOne(u *User) *UserUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UserClient) UpdateOneID(id int) *UserUpdateOne {
+func (c *UserClient) UpdateOneID(id xid.ID) *UserUpdateOne {
 	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
 	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -178,7 +277,7 @@ func (c *UserClient) DeleteOne(u *User) *UserDeleteOne {
 }
 
 // DeleteOneID returns a delete builder for the given id.
-func (c *UserClient) DeleteOneID(id int) *UserDeleteOne {
+func (c *UserClient) DeleteOneID(id xid.ID) *UserDeleteOne {
 	builder := c.Delete().Where(user.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -193,12 +292,12 @@ func (c *UserClient) Query() *UserQuery {
 }
 
 // Get returns a User entity by its id.
-func (c *UserClient) Get(ctx context.Context, id int) (*User, error) {
+func (c *UserClient) Get(ctx context.Context, id xid.ID) (*User, error) {
 	return c.Query().Where(user.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UserClient) GetX(ctx context.Context, id int) *User {
+func (c *UserClient) GetX(ctx context.Context, id xid.ID) *User {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

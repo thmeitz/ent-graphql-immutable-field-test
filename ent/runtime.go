@@ -2,8 +2,59 @@
 
 package ent
 
+import (
+	"time"
+
+	"entgo.io/bug/ent/schema"
+	"entgo.io/bug/ent/testlist"
+	"entgo.io/bug/ent/user"
+	"github.com/rs/xid"
+)
+
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	testlistMixin := schema.TestList{}.Mixin()
+	testlistMixinFields0 := testlistMixin[0].Fields()
+	_ = testlistMixinFields0
+	testlistMixinFields1 := testlistMixin[1].Fields()
+	_ = testlistMixinFields1
+	testlistFields := schema.TestList{}.Fields()
+	_ = testlistFields
+	// testlistDescCreatedAt is the schema descriptor for created_at field.
+	testlistDescCreatedAt := testlistMixinFields1[0].Descriptor()
+	// testlist.DefaultCreatedAt holds the default value on creation for the created_at field.
+	testlist.DefaultCreatedAt = testlistDescCreatedAt.Default.(func() time.Time)
+	// testlistDescUpdatedAt is the schema descriptor for updated_at field.
+	testlistDescUpdatedAt := testlistMixinFields1[1].Descriptor()
+	// testlist.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	testlist.DefaultUpdatedAt = testlistDescUpdatedAt.Default.(func() time.Time)
+	// testlist.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	testlist.UpdateDefaultUpdatedAt = testlistDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// testlistDescID is the schema descriptor for id field.
+	testlistDescID := testlistMixinFields0[0].Descriptor()
+	// testlist.DefaultID holds the default value on creation for the id field.
+	testlist.DefaultID = testlistDescID.Default.(func() xid.ID)
+	userMixin := schema.User{}.Mixin()
+	userMixinFields0 := userMixin[0].Fields()
+	_ = userMixinFields0
+	userMixinFields1 := userMixin[1].Fields()
+	_ = userMixinFields1
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userMixinFields1[0].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userMixinFields1[1].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userMixinFields0[0].Descriptor()
+	// user.DefaultID holds the default value on creation for the id field.
+	user.DefaultID = userDescID.Default.(func() xid.ID)
 }

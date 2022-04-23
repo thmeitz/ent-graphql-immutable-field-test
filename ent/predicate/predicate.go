@@ -6,5 +6,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// TestList is the predicate function for testlist builders.
+type TestList func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)

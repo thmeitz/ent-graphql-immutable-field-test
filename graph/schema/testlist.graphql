@@ -1,0 +1,76 @@
+enum TestListOrderField {
+  NAME
+  VALID_FROM
+  VALID_TO
+  CUSTOMER_GROUP
+  CREATED_AT
+  UPDATED_AT
+}
+
+"""
+TestListOrder is used for ordering TestList objects.
+"""
+input TestListOrder {
+  direction: OrderDirection!
+  field: TestListOrderField
+}
+
+input CreateTestListInput {
+  name: String!
+  validFrom: Date
+  validTo: Date
+}
+
+input UpdateTestListInput {
+  name: String
+  validFrom: Date
+  validTo: Date
+}
+
+extend type TestListConnection {
+  totalCount: Int!
+  pageInfo: PageInfo!
+  edges: [TestListEdge]
+}
+
+extend type TestListEdge {
+  node: TestList
+  cursor: Cursor!
+}
+
+type TestList implements Node {
+  id: ID!
+  name: String!
+  validFrom: Date!
+  validTo: Date
+}
+
+extend type Query {
+  TestLists(
+    after: Cursor
+    first: Int
+    before: Cursor
+    last: Int
+    orderBy: TestListOrder
+    where: TestListWhereInput
+  ): TestListConnection
+}
+
+extend type Mutation {
+  """
+  create a TestList
+  """
+  createTestList(input: CreateTestListInput!): TestList!
+
+  """
+  update a TestList by Id
+  """
+  updateTestList(id: ID!, input: UpdateTestListInput!): TestList!
+
+  """
+  delete a TestList by Id
+
+  be careful - that destroys the TestList and is not recoverable
+  """
+  deleteTestList(id: ID!): TestList!
+}

@@ -3,14 +3,44 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
 
 var (
+	// TestListsColumns holds the columns for the "test_lists" table.
+	TestListsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "name", Type: field.TypeString, Size: 50},
+		{Name: "valid_from", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "date"}},
+		{Name: "valid_to", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "date"}},
+	}
+	// TestListsTable holds the schema information for the "test_lists" table.
+	TestListsTable = &schema.Table{
+		Name:       "test_lists",
+		Columns:    TestListsColumns,
+		PrimaryKey: []*schema.Column{TestListsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "ix_valid_from",
+				Unique:  false,
+				Columns: []*schema.Column{TestListsColumns[4]},
+			},
+			{
+				Name:    "ux_name_valid_from",
+				Unique:  true,
+				Columns: []*schema.Column{TestListsColumns[3], TestListsColumns[4]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "id", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
+		{Name: "updated_at", Type: field.TypeTime, SchemaType: map[string]string{"mysql": "datetime(6)"}},
 		{Name: "age", Type: field.TypeInt},
 		{Name: "name", Type: field.TypeString},
 	}
@@ -22,9 +52,13 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		TestListsTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	TestListsTable.Annotation = &entsql.Annotation{
+		Table: "test_lists",
+	}
 }
