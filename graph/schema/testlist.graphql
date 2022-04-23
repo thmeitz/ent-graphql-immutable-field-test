@@ -23,7 +23,6 @@ input CreateTestListInput {
 
 input UpdateTestListInput {
   name: String
-  validFrom: Date
   validTo: Date
 }
 

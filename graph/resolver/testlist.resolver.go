@@ -6,7 +6,6 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/bug/ent"
 	"entgo.io/bug/graph/generated"
@@ -29,17 +28,7 @@ func (r *queryResolver) TestLists(ctx context.Context, after *ent.Cursor, first 
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *updateTestListInputResolver) ValidFrom(ctx context.Context, obj *ent.UpdateTestListInput, data *time.Time) error {
-	panic(fmt.Errorf("not implemented"))
-}
-
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
-// UpdateTestListInput returns generated.UpdateTestListInputResolver implementation.
-func (r *Resolver) UpdateTestListInput() generated.UpdateTestListInputResolver {
-	return &updateTestListInputResolver{r}
-}
-
 type mutationResolver struct{ *Resolver }
-type updateTestListInputResolver struct{ *Resolver }

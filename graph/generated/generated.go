@@ -43,7 +43,6 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
-	UpdateTestListInput() UpdateTestListInputResolver
 }
 
 type DirectiveRoot struct {
@@ -102,10 +101,6 @@ type QueryResolver interface {
 	Node(ctx context.Context, id xid.ID) (ent.Noder, error)
 	Nodes(ctx context.Context, ids []xid.ID) ([]ent.Noder, error)
 	TestLists(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, orderBy *ent.TestListOrder, where *ent.TestListWhereInput) (*ent.TestListConnection, error)
-}
-
-type UpdateTestListInputResolver interface {
-	ValidFrom(ctx context.Context, obj *ent.UpdateTestListInput, data *time.Time) error
 }
 
 type executableSchema struct {
@@ -573,7 +568,6 @@ input CreateTestListInput {
 
 input UpdateTestListInput {
   name: String
-  validFrom: Date
   validTo: Date
 }
 
@@ -4332,17 +4326,6 @@ func (ec *executionContext) unmarshalInputUpdateTestListInput(ctx context.Contex
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
 			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
-				return it, err
-			}
-		case "validFrom":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validFrom"))
-			data, err := ec.unmarshalODate2ᚖtimeᚐTime(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			if err = ec.resolvers.UpdateTestListInput().ValidFrom(ctx, &it, data); err != nil {
 				return it, err
 			}
 		case "validTo":
